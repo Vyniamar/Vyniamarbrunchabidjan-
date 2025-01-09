@@ -35,7 +35,7 @@
             color: #000;
             border: 2px solid #000;
         }
-        canvas {
+        canvas, img {
             display: block;
             margin: 20px auto;
         }
@@ -68,7 +68,6 @@
     <div id="mainContent" class="hidden">
         <h1>Vyniamar Brunch - 1ère édition</h1>
         <img src="VB1.png" alt="Logo" id="logo">
-        <button onclick="logout()">Se déconnecter</button>
         <div class="container">
             <h2>Génération de QR Code</h2>
             <input type="text" id="name" placeholder="Entrez un nom">
@@ -92,6 +91,8 @@
             <button onclick="viewDestroyedTickets()">Tickets Détruits</button>
             <button onclick="resetDestroyedTickets()">Réinitialiser Tickets Détruits</button>
         </div>
+
+        <button onclick="logout()" style="margin-top: 20px;">Se déconnecter</button>
     </div>
 
     <footer>Vyniamar Brunch - 1ère édition 2025</footer>
@@ -121,7 +122,7 @@
         }
 
         // Génération d'un QR Code
-        function generateQRCode() {
+        async function generateQRCode() {
             const name = document.getElementById('name').value.trim();
             let ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
 
@@ -140,24 +141,48 @@
             const qrData = `Vyniamar Brunch - 1ère édition\nNom: ${name}\nTicket #${ticketNumber}\n${type}\nDate: ${date}`;
 
             const canvas = document.getElementById('qrCanvas');
-            QRCode.toCanvas(canvas, qrData, { width: 200 }, (error) => {
-                if (error) {
-                    alert('Erreur lors de la génération du QR Code.');
-                    console.error(error);
-                    return;
-                }
+            await QRCode.toCanvas(canvas, qrData, { width: 200 });
 
-                // Télécharger le QR code
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = canvas.toDataURL();
-                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
-                downloadLink.style.display = 'inline';
-                downloadLink.textContent = 'Télécharger QR Code';
+            const logo = new Image();
+            logo.src = "VB1.png";
+            logo.onload = () => {
+                const ctx = canvas.getContext('2d');
+                const height = canvas.height;
+                const width = canvas.width;
+
+                // Augmenter la taille pour ajouter le logo et les informations
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = width;
+                finalCanvas.height = height + 100;
+
+                const finalCtx = finalCanvas.getContext('2d');
+                finalCtx.fillStyle = "#fff";
+                finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+                // Copier le QR Code sur le canvas final
+                finalCtx.drawImage(canvas, 0, 0);
+
+                // Ajouter le logo
+                finalCtx.drawImage(logo, (width - 50) / 2, height + 10, 50, 50);
+
+                // Ajouter les informations
+                finalCtx.fillStyle = "#000";
+                finalCtx.font = "12px Arial";
+                finalCtx.textAlign = "center";
+                finalCtx.fillText(`Nom: ${name}`, width / 2, height + 70);
+                finalCtx.fillText(`Ticket #${ticketNumber}`, width / 2, height + 85);
 
                 // Enregistrer dans la liste des tickets générés
                 generatedTickets.push({ name, number: ticketNumber, date });
                 localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
-            });
+
+                // Activer le lien de téléchargement
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = finalCanvas.toDataURL();
+                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+                downloadLink.style.display = 'inline';
+                downloadLink.textContent = 'Télécharger QR Code';
+            };
         }
 
         // Voir les tickets générés
