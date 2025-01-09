@@ -8,11 +8,11 @@
         body {
             background-color: #fff700; /* Jaune */
             font-family: Arial, sans-serif;
-            color: #000; /* Noir */
+            color: #000;
             text-align: center;
             padding: 20px;
         }
-        h1 {
+        h1, h2 {
             color: #000;
         }
         .container {
@@ -21,7 +21,6 @@
             padding: 20px;
             margin: auto;
             max-width: 400px;
-            display: none;
         }
         button {
             background-color: #000;
@@ -29,6 +28,7 @@
             border: none;
             padding: 10px 20px;
             cursor: pointer;
+            margin: 10px;
         }
         button:hover {
             background-color: #fff;
@@ -36,36 +36,15 @@
             border: 2px solid #000;
         }
         canvas {
-            margin: 10px auto;
             display: block;
+            margin: 20px auto;
         }
         #logo {
             width: 100px;
-            margin: 10px auto;
-            display: block;
+            margin: 20px auto;
         }
-        .message {
-            color: green;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .error {
-            color: red;
-        }
-        .destroyed-tickets {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #000;
-            background-color: #fff;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        .login-container {
-            margin: auto;
-            max-width: 400px;
-            background-color: #fff;
-            border: 2px solid #000;
-            padding: 20px;
+        .hidden {
+            display: none;
         }
         footer {
             margin-top: 20px;
@@ -75,229 +54,144 @@
     </style>
 </head>
 <body>
-    <img src="VB1.png" alt="Logo" id="logo">
-    <h1>VYNIAMAR BRUNCH</h1>
-
-    <!-- Section de connexion -->
-    <div class="login-container" id="loginContainer">
+    <div id="loginPage" class="container">
+        <img src="VB1.png" alt="Logo" id="logo">
+        <h1>VYNIAMAR BRUNCH</h1>
         <h2>Connexion</h2>
-        <input type="text" id="username" placeholder="Identifiant">
+        <input type="text" id="login" placeholder="Identifiant">
         <br><br>
         <input type="password" id="password" placeholder="Mot de passe">
         <br><br>
         <button onclick="login()">Se connecter</button>
-        <p id="loginMessage" class="error"></p>
     </div>
 
-    <!-- Section principale -->
-    <div class="container" id="mainContainer">
-        <h2>Génération de QR Code</h2>
-        <input type="text" id="name" placeholder="Entrez un nom">
-        <br><br>
-        <input type="number" id="ticketNumber" placeholder="Entrez un numéro (001-600)">
-        <br><br>
-        <button onclick="generateQRCode()">Générer QR Code</button>
-        <canvas id="qrCanvas"></canvas>
-        <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
-        <br><br>
-        <h3>Compteurs</h3>
-        <p id="generatedCounter">Tickets générés : 0</p>
-        <button onclick="resetGeneratedCounter()">Réinitialiser Tickets Générés</button>
-        <p id="soldCounter">Tickets vendus : 0</p>
-        <button onclick="resetSoldCounter()">Réinitialiser Tickets Vendus</button>
-        <br><br>
-        <h2>Scanner un QR Code</h2>
-        <button onclick="startScanner()">Scanner QR Code</button>
-        <video id="preview" style="display: none; width: 100%; margin-top: 10px;"></video>
-        <p id="scanMessage" class="message"></p>
-        <br><br>
-        <h2>Détruire Code</h2>
-        <input type="number" id="destroyTicketNumber" placeholder="Numéro de ticket (001-600)">
-        <br><br>
-        <input type="text" id="destroyTicketName" placeholder="Nom (facultatif)">
-        <br><br>
-        <button onclick="destroyTicket()">Détruire Code</button>
-        <p id="destroyMessage" class="message"></p>
-        <h3>Liste des tickets détruits</h3>
-        <div class="destroyed-tickets" id="destroyedTicketsList">Aucun ticket détruit pour l'instant.</div>
-        <button onclick="resetDestroyedTickets()">Réinitialiser Liste des Tickets Détruits</button>
+    <div id="mainContent" class="hidden">
+        <h1>Vyniamar Brunch - 1ère édition</h1>
+        <img src="VB1.png" alt="Logo" id="logo">
+        <div class="container">
+            <h2>Génération de QR Code</h2>
+            <input type="text" id="name" placeholder="Entrez un nom">
+            <br><br>
+            <input type="number" id="ticketNumber" placeholder="Entrez un numéro (001-600)">
+            <br><br>
+            <button onclick="generateQRCode()">Générer QR Code</button>
+            <canvas id="qrCanvas"></canvas>
+            <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
+            <button onclick="viewGeneratedTickets()">Tickets Générés</button>
+            <button onclick="resetGeneratedTickets()">Réinitialiser Tickets Générés</button>
+        </div>
+
+        <div class="container">
+            <h2>Destruction de QR Code</h2>
+            <input type="text" id="destroyName" placeholder="Entrez un nom">
+            <br><br>
+            <input type="number" id="destroyTicketNumber" placeholder="Numéro du ticket">
+            <br><br>
+            <button onclick="destroyTicket()">Détruire Ticket</button>
+            <button onclick="viewDestroyedTickets()">Tickets Détruits</button>
+            <button onclick="resetDestroyedTickets()">Réinitialiser Tickets Détruits</button>
+        </div>
     </div>
 
-    <footer>Vyniamar Brunch 1ère édition 2025.</footer>
+    <footer>Vyniamar Brunch - 1ère édition 2025</footer>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script>
-        const scannedTickets = new Map(); // Liste des tickets scannés (ticketNumber => { name, type, destroyed })
-        const generatedTickets = new Map(); // Liste des tickets générés
-        const destroyedTickets = new Map(); // Liste des tickets détruits
-        let soldCounter = 0;
+        let generatedTickets = [];
+        let destroyedTickets = [];
 
-        // Identifiants pour la connexion
-        const validUsername = "VB9876543";
-        const validPassword = "9876543VB";
-
-        // Fonction pour gérer la connexion
+        // Connexion au site
         function login() {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-            const loginMessage = document.getElementById("loginMessage");
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
 
-            if (username === validUsername && password === validPassword) {
-                document.getElementById("loginContainer").style.display = "none";
-                document.getElementById("mainContainer").style.display = "block";
+            if (login === "VB9876543" && password === "9876543VB") {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
             } else {
-                loginMessage.textContent = "Identifiant ou mot de passe incorrect.";
+                alert("Identifiants incorrects");
             }
         }
 
-        // Fonction pour mettre à jour les compteurs
-        function updateCounters() {
-            document.getElementById("generatedCounter").textContent = `Tickets générés : ${generatedTickets.size}`;
-            document.getElementById("soldCounter").textContent = `Tickets vendus : ${soldCounter}`;
-            updateDestroyedTicketsList();
-        }
-
-        // Mettre à jour la liste des tickets détruits
-        function updateDestroyedTicketsList() {
-            const list = document.getElementById("destroyedTicketsList");
-            if (destroyedTickets.size === 0) {
-                list.textContent = "Aucun ticket détruit pour l'instant.";
-            } else {
-                list.innerHTML = "";
-                destroyedTickets.forEach((ticket, number) => {
-                    const ticketInfo = document.createElement("div");
-                    ticketInfo.textContent = `#${number} - ${ticket.name} (${ticket.type})`;
-                    list.appendChild(ticketInfo);
-                });
-            }
-        }
-
-        // Fonction pour générer un QR Code
+        // Génération d'un QR Code
         function generateQRCode() {
             const name = document.getElementById('name').value.trim();
-            const ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
-            const generationDate = new Date().toLocaleString();
+            let ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
 
             if (!name || !ticketNumber || ticketNumber < 1 || ticketNumber > 600) {
                 alert('Veuillez entrer un nom et un numéro valide entre 001 et 600.');
                 return;
             }
 
-            if (destroyedTickets.has(ticketNumber)) {
-                alert(`Le ticket #${ticketNumber} a été détruit et ne peut plus être généré.`);
+            if (destroyedTickets.some(ticket => ticket.number === ticketNumber)) {
+                alert(`Le ticket #${ticketNumber} a été détruit et ne peut pas être recréé.`);
                 return;
             }
 
-            const ticketType = ticketNumber <= 200 ? "Ticket VIP" : "Ticket GPB";
+            const type = ticketNumber <= 200 ? "Ticket VIP" : "Ticket GPB";
+            const date = new Date().toLocaleString();
+            const qrData = `Vyniamar Brunch - 1ère édition\nNom: ${name}\nTicket #${ticketNumber}\n${type}\nDate: ${date}`;
 
-            const qrData = `VYNIAMAR BRUNCH - Nom: ${name} - ${ticketType} - Ticket #${ticketNumber} - Date: ${generationDate}`;
             const canvas = document.getElementById('qrCanvas');
             QRCode.toCanvas(canvas, qrData, { width: 200 }, (error) => {
                 if (error) {
                     alert('Erreur lors de la génération du QR Code.');
                     console.error(error);
-                } else {
-                    const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = canvas.toDataURL();
-                    downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
-                    downloadLink.style.display = 'inline';
-                    downloadLink.textContent = 'Télécharger QR Code';
-
-                    generatedTickets.set(ticketNumber, { name, ticketType, generationDate });
-                    updateCounters();
+                    return;
                 }
+
+                // Télécharger le QR code
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = canvas.toDataURL();
+                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+                downloadLink.style.display = 'inline';
+                downloadLink.textContent = 'Télécharger QR Code';
+
+                // Enregistrer dans la liste des tickets générés
+                generatedTickets.push({ name, number: ticketNumber, date });
             });
         }
 
-        // Fonction pour scanner un QR Code
-        function startScanner() {
-            const scanMessage = document.getElementById('scanMessage');
-            scanMessage.textContent = '';
-
-            const html5QrCode = new Html5Qrcode("preview");
-            const qrCodeSuccessCallback = (decodedText) => {
-                html5QrCode.stop().then(() => {
-                    const match = decodedText.match(/Nom: (.+) - (Ticket (VIP|GPB)) - Ticket #(\d+)/);
-                    if (match) {
-                        const [_, name, ticketType, __, ticketNumber] = match;
-
-                        if (destroyedTickets.has(ticketNumber)) {
-                            scanMessage.textContent = `Le ticket #${ticketNumber} a été détruit et ne peut pas être scanné.`;
-                            scanMessage.className = 'error';
-                            return;
-                        }
-
-                        if (!scannedTickets.has(ticketNumber)) {
-                            scannedTickets.set(ticketNumber, { name, ticketType, destroyed: false });
-                            soldCounter++;
-                        }
-
-                        scanMessage.textContent = `Ticket scanné : Nom: ${name} - ${ticketType} - Ticket #${ticketNumber}`;
-                        scanMessage.className = 'message';
-                        updateCounters();
-                    } else {
-                        scanMessage.textContent = 'QR Code invalide.';
-                        scanMessage.className = 'error';
-                    }
-                }).catch(console.error);
-            };
-
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback).catch(console.error);
+        // Voir les tickets générés
+        function viewGeneratedTickets() {
+            const list = generatedTickets.map(ticket => 
+                `Date: ${ticket.date}\nNom: ${ticket.name}\nNuméro: #${ticket.number}`).join("\n\n");
+            alert("Tickets générés :\n" + (list || "Aucun ticket généré."));
         }
 
-        // Fonction pour détruire un ticket
+        // Réinitialiser les tickets générés
+        function resetGeneratedTickets() {
+            generatedTickets = [];
+            alert("La liste des tickets générés a été réinitialisée.");
+        }
+
+        // Destruction d'un ticket
         function destroyTicket() {
-            const ticketNumber = document.getElementById("destroyTicketNumber").value.trim();
-            const name = document.getElementById("destroyTicketName").value.trim();
-            const destroyMessage = document.getElementById("destroyMessage");
+            const name = document.getElementById('destroyName').value.trim();
+            const ticketNumber = document.getElementById('destroyTicketNumber').value.padStart(3, '0');
 
-            if (!scannedTickets.has(ticketNumber)) {
-                destroyMessage.textContent = "Ticket invalide ou non scanné.";
-                destroyMessage.className = "error";
+            const index = generatedTickets.findIndex(ticket => ticket.number === ticketNumber && ticket.name === name);
+
+            if (index === -1) {
+                alert("Ticket introuvable ou déjà détruit.");
                 return;
             }
 
-            const ticket = scannedTickets.get(ticketNumber);
-
-            if (name && ticket.name !== name) {
-                destroyMessage.textContent = "Le nom ne correspond pas au ticket scanné.";
-                destroyMessage.className = "error";
-                return;
-            }
-
-            if (ticket.destroyed) {
-                destroyMessage.textContent = "Ce ticket a déjà été détruit.";
-                destroyMessage.className = "error";
-                return;
-            }
-
-            ticket.destroyed = true;
-            destroyedTickets.set(ticketNumber, ticket);
-            destroyMessage.textContent = `Ticket #${ticketNumber} détruit avec succès.`;
-            destroyMessage.className = "message";
-            updateCounters();
+            destroyedTickets.push(generatedTickets.splice(index, 1)[0]);
+            alert(`Le ticket #${ticketNumber} - ${name} a été détruit.`);
         }
 
-        // Réinitialiser les listes
-        function resetGeneratedCounter() {
-            generatedTickets.clear();
-            updateCounters();
-            alert('Compteur des tickets générés réinitialisé.');
+        // Voir les tickets détruits
+        function viewDestroyedTickets() {
+            const list = destroyedTickets.map(ticket => 
+                `Date: ${ticket.date}\nNom: ${ticket.name}\nNuméro: #${ticket.number}`).join("\n\n");
+            alert("Tickets détruits :\n" + (list || "Aucun ticket détruit."));
         }
 
-        function resetSoldCounter() {
-            soldCounter = 0;
-            scannedTickets.clear();
-            updateCounters();
-            alert('Compteur des tickets vendus réinitialisé.');
-        }
-
+        // Réinitialiser les tickets détruits
         function resetDestroyedTickets() {
-            destroyedTickets.clear();
-            updateCounters();
-            alert('Liste des tickets détruits réinitialisée.');
+            destroyedTickets = [];
+            alert("La liste des tickets détruits a été réinitialisée.");
         }
     </script>
 </body>
