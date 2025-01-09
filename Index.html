@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VYNIAMAR BRUNCH</title>
+    <style>
+        body {
+            background-color: #fff700; /* Jaune */
+            font-family: Arial, sans-serif;
+            color: #000; /* Noir */
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #000;
+        }
+        .container {
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 20px;
+            margin: auto;
+            max-width: 400px;
+            display: none;
+        }
+        button {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #fff;
+            color: #000;
+            border: 2px solid #000;
+        }
+        canvas {
+            margin: 10px auto;
+            display: block;
+        }
+        #logo {
+            width: 100px;
+            margin: 10px auto;
+            display: block;
+        }
+        .message {
+            color: green;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+        }
+        .destroyed-tickets {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .login-container {
+            margin: auto;
+            max-width: 400px;
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 20px;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <img src="VB1.png" alt="Logo" id="logo">
+    <h1>VYNIAMAR BRUNCH</h1>
+
+    <!-- Section de connexion -->
+    <div class="login-container" id="loginContainer">
+        <h2>Connexion</h2>
+        <input type="text" id="username" placeholder="Identifiant">
+        <br><br>
+        <input type="password" id="password" placeholder="Mot de passe">
+        <br><br>
+        <button onclick="login()">Se connecter</button>
+        <p id="loginMessage" class="error"></p>
+    </div>
+
+    <!-- Section principale -->
+    <div class="container" id="mainContainer">
+        <h2>Génération de QR Code</h2>
+        <input type="text" id="name" placeholder="Entrez un nom">
+        <br><br>
+        <input type="number" id="ticketNumber" placeholder="Entrez un numéro (001-600)">
+        <br><br>
+        <button onclick="generateQRCode()">Générer QR Code</button>
+        <canvas id="qrCanvas"></canvas>
+        <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
+        <br><br>
+        <h3>Compteurs</h3>
+        <p id="generatedCounter">Tickets générés : 0</p>
+        <button onclick="resetGeneratedCounter()">Réinitialiser Tickets Générés</button>
+        <p id="soldCounter">Tickets vendus : 0</p>
+        <button onclick="resetSoldCounter()">Réinitialiser Tickets Vendus</button>
+        <br><br>
+        <h2>Scanner un QR Code</h2>
+        <button onclick="startScanner()">Scanner QR Code</button>
+        <video id="preview" style="display: none; width: 100%; margin-top: 10px;"></video>
+        <p id="scanMessage" class="message"></p>
+        <br><br>
+        <h2>Détruire Code</h2>
+        <input type="number" id="destroyTicketNumber" placeholder="Numéro de ticket (001-600)">
+        <br><br>
+        <input type="text" id="destroyTicketName" placeholder="Nom (facultatif)">
+        <br><br>
+        <button onclick="destroyTicket()">Détruire Code</button>
+        <p id="destroyMessage" class="message"></p>
+        <h3>Liste des tickets détruits</h3>
+        <div class="destroyed-tickets" id="destroyedTicketsList">Aucun ticket détruit pour l'instant.</div>
+        <button onclick="resetDestroyedTickets()">Réinitialiser Liste des Tickets Détruits</button>
+    </div>
+
+    <footer>Vyniamar Brunch 1ère édition 2025.</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script>
+        const scannedTickets = new Map(); // Liste des tickets scannés (ticketNumber => { name, type, destroyed })
+        const generatedTickets = new Map(); // Liste des tickets générés
+        const destroyedTickets = new Map(); // Liste des tickets détruits
+        let soldCounter = 0;
+
+        // Identifiants pour la connexion
+        const validUsername = "VB9876543";
+        const validPassword = "9876543VB";
+
+        // Fonction pour gérer la connexion
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const loginMessage = document.getElementById("loginMessage");
+
+            if (username === validUsername && password === validPassword) {
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("mainContainer").style.display = "block";
+            } else {
+                loginMessage.textContent = "Identifiant ou mot de passe incorrect.";
+            }
+        }
+
+        // Fonction pour mettre à jour les compteurs
+        function updateCounters() {
+            document.getElementById("generatedCounter").textContent = `Tickets générés : ${generatedTickets.size}`;
+            document.getElementById("soldCounter").textContent = `Tickets vendus : ${soldCounter}`;
+            updateDestroyedTicketsList();
+        }
+
+        // Mettre à jour la liste des tickets détruits
+        function updateDestroyedTicketsList() {
+            const list = document.getElementById("destroyedTicketsList");
+            if (destroyedTickets.size === 0) {
+                list.textContent = "Aucun ticket détruit pour l'instant.";
+            } else {
+                list.innerHTML = "";
+                destroyedTickets.forEach((ticket, number) => {
+                    const ticketInfo = document.createElement("div");
+                    ticketInfo.textContent = `#${number} - ${ticket.name} (${ticket.type})`;
+                    list.appendChild(ticketInfo);
+                });
+            }
+        }
+
+        // Fonction pour générer un QR Code
+        function generateQRCode() {
+            const name = document.getElementById('name').value.trim();
+            const ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
+            const generationDate = new Date().toLocaleString();
+
+            if (!name || !ticketNumber || ticketNumber < 1 || ticketNumber > 600) {
+                alert('Veuillez entrer un nom et un numéro valide entre 001 et 600.');
+                return;
+            }
+
+            if (destroyedTickets.has(ticketNumber)) {
+                alert(`Le ticket #${ticketNumber} a été détruit et ne peut plus être généré.`);
+                return;
+            }
+
+            const ticketType = ticketNumber <= 200 ? "Ticket VIP" : "Ticket GPB";
+
+            const qrData = `VYNIAMAR BRUNCH - Nom: ${name} - ${ticketType} - Ticket #${ticketNumber} - Date: ${generationDate}`;
+            const canvas = document.getElementById('qrCanvas');
+            QRCode.toCanvas(canvas, qrData, { width: 200 }, (error) => {
+                if (error) {
+                    alert('Erreur lors de la génération du QR Code.');
+                    console.error(error);
+                } else {
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = canvas.toDataURL();
+                    downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+                    downloadLink.style.display = 'inline';
+                    downloadLink.textContent = 'Télécharger QR Code';
+
+                    generatedTickets.set(ticketNumber, { name, ticketType, generationDate });
+                    updateCounters();
+                }
+            });
+        }
+
+        // Fonction pour scanner un QR Code
+        function startScanner() {
+            const scanMessage = document.getElementById('scanMessage');
+            scanMessage.textContent = '';
+
+            const html5QrCode = new Html5Qrcode("preview");
+            const qrCodeSuccessCallback = (decodedText) => {
+                html5QrCode.stop().then(() => {
+                    const match = decodedText.match(/Nom: (.+) - (Ticket (VIP|GPB)) - Ticket #(\d+)/);
+                    if (match) {
+                        const [_, name, ticketType, __, ticketNumber] = match;
+
+                        if (destroyedTickets.has(ticketNumber)) {
+                            scanMessage.textContent = `Le ticket #${ticketNumber} a été détruit et ne peut pas être scanné.`;
+                            scanMessage.className = 'error';
+                            return;
+                        }
+
+                        if (!scannedTickets.has(ticketNumber)) {
+                            scannedTickets.set(ticketNumber, { name, ticketType, destroyed: false });
+                            soldCounter++;
+                        }
+
+                        scanMessage.textContent = `Ticket scanné : Nom: ${name} - ${ticketType} - Ticket #${ticketNumber}`;
+                        scanMessage.className = 'message';
+                        updateCounters();
+                    } else {
+                        scanMessage.textContent = 'QR Code invalide.';
+                        scanMessage.className = 'error';
+                    }
+                }).catch(console.error);
+            };
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback).catch(console.error);
+        }
+
+        // Fonction pour détruire un ticket
+        function destroyTicket() {
+            const ticketNumber = document.getElementById("destroyTicketNumber").value.trim();
+            const name = document.getElementById("destroyTicketName").value.trim();
+            const destroyMessage = document.getElementById("destroyMessage");
+
+            if (!scannedTickets.has(ticketNumber)) {
+                destroyMessage.textContent = "Ticket invalide ou non scanné.";
+                destroyMessage.className = "error";
+                return;
+            }
+
+            const ticket = scannedTickets.get(ticketNumber);
+
+            if (name && ticket.name !== name) {
+                destroyMessage.textContent = "Le nom ne correspond pas au ticket scanné.";
+                destroyMessage.className = "error";
+                return;
+            }
+
+            if (ticket.destroyed) {
+                destroyMessage.textContent = "Ce ticket a déjà été détruit.";
+                destroyMessage.className = "error";
+                return;
+            }
+
+            ticket.destroyed = true;
+            destroyedTickets.set(ticketNumber, ticket);
+            destroyMessage.textContent = `Ticket #${ticketNumber} détruit avec succès.`;
+            destroyMessage.className = "message";
+            updateCounters();
+        }
+
+        // Réinitialiser les listes
+        function resetGeneratedCounter() {
+            generatedTickets.clear();
+            updateCounters();
+            alert('Compteur des tickets générés réinitialisé.');
+        }
+
+        function resetSoldCounter() {
+            soldCounter = 0;
+            scannedTickets.clear();
+            updateCounters();
+            alert('Compteur des tickets vendus réinitialisé.');
+        }
+
+        function resetDestroyedTickets() {
+            destroyedTickets.clear();
+            updateCounters();
+            alert('Liste des tickets détruits réinitialisée.');
+        }
+    </script>
+</body>
+</html>
