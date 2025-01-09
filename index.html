@@ -68,6 +68,7 @@
     <div id="mainContent" class="hidden">
         <h1>Vyniamar Brunch - 1ère édition</h1>
         <img src="VB1.png" alt="Logo" id="logo">
+        <button onclick="logout()">Se déconnecter</button>
         <div class="container">
             <h2>Génération de QR Code</h2>
             <input type="text" id="name" placeholder="Entrez un nom">
@@ -97,8 +98,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
-        let generatedTickets = [];
-        let destroyedTickets = [];
+        let generatedTickets = JSON.parse(localStorage.getItem('generatedTickets')) || [];
+        let destroyedTickets = JSON.parse(localStorage.getItem('destroyedTickets')) || [];
 
         // Connexion au site
         function login() {
@@ -111,6 +112,12 @@
             } else {
                 alert("Identifiants incorrects");
             }
+        }
+
+        // Déconnexion
+        function logout() {
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
         }
 
         // Génération d'un QR Code
@@ -149,6 +156,7 @@
 
                 // Enregistrer dans la liste des tickets générés
                 generatedTickets.push({ name, number: ticketNumber, date });
+                localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
             });
         }
 
@@ -162,6 +170,7 @@
         // Réinitialiser les tickets générés
         function resetGeneratedTickets() {
             generatedTickets = [];
+            localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
             alert("La liste des tickets générés a été réinitialisée.");
         }
 
@@ -178,6 +187,8 @@
             }
 
             destroyedTickets.push(generatedTickets.splice(index, 1)[0]);
+            localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
+            localStorage.setItem('destroyedTickets', JSON.stringify(destroyedTickets));
             alert(`Le ticket #${ticketNumber} - ${name} a été détruit.`);
         }
 
@@ -191,6 +202,7 @@
         // Réinitialiser les tickets détruits
         function resetDestroyedTickets() {
             destroyedTickets = [];
+            localStorage.setItem('destroyedTickets', JSON.stringify(destroyedTickets));
             alert("La liste des tickets détruits a été réinitialisée.");
         }
     </script>
