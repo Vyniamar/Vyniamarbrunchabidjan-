@@ -3,82 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - VYNIAMAR BRUNCH</title>
+    <title>VYNIAMAR BRUNCH</title>
     <style>
         body {
             background-color: #fff700;
             font-family: Arial, sans-serif;
+            color: #000;
             text-align: center;
-            color: #000;
             padding: 20px;
         }
-        .container {
-            background-color: #fff;
-            border: 2px solid #000;
-            padding: 20px;
-            margin: auto;
-            max-width: 400px;
-        }
-        button {
-            background-color: #000;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #fff;
+        h1, h2 {
             color: #000;
-            border: 2px solid #000;
-        }
-        img {
-            display: block;
-            margin: 20px auto;
-            width: 100px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <img src="VB1.png" alt="Logo">
-        <h1>Connexion - VYNIAMAR BRUNCH</h1>
-        <input type="text" id="login" placeholder="Identifiant">
-        <br><br>
-        <input type="password" id="password" placeholder="Mot de passe">
-        <br><br>
-        <button onclick="login()">Se connecter</button>
-    </div>
-
-    <script>
-        function login() {
-            const login = document.getElementById('login').value;
-            const password = document.getElementById('password').value;
-
-            if (login === "VB9876543" && password === "9876543VB") {
-                // Rediriger vers la page espace QR après connexion réussie
-                window.location.href = "espace_qr.html";
-            } else {
-                alert("Identifiants incorrects.");
-            }
-        }
-    </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace QR - VYNIAMAR BRUNCH</title>
-    <style>
-        body {
-            background-color: #fff700;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            color: #000;
-            padding: 20px;
         }
         .container {
             background-color: #fff;
@@ -116,56 +51,78 @@
     </style>
 </head>
 <body>
-    <h1>Vyniamar Brunch - 1ère édition</h1>
-    <img src="VB1.png" alt="Logo" id="logo">
-
-    <div class="container">
-        <h2>Génération de QR Code</h2>
-        <input type="text" id="name" placeholder="Entrez un nom">
+    <!-- Page de connexion -->
+    <div id="loginPage" class="container">
+        <img src="VB1.png" alt="Logo" id="logo">
+        <h1>VYNIAMAR BRUNCH</h1>
+        <h2>Connexion</h2>
+        <input type="text" id="login" placeholder="Identifiant">
         <br><br>
-        <input type="number" id="ticketNumber" placeholder="Entrez un numéro (001-600)">
+        <input type="password" id="password" placeholder="Mot de passe">
         <br><br>
-        <button onclick="generateQRCode()">Générer QR Code</button>
-        <canvas id="qrCanvas"></canvas>
-        <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
-        <br>
-        <button onclick="openListPage('generated')">Tickets Générés</button>
-        <button onclick="resetGeneratedTickets()">Réinitialiser Tickets Générés</button>
+        <button onclick="login()">Se connecter</button>
     </div>
 
-    <div class="container">
-        <h2>Destruction de QR Code</h2>
-        <input type="text" id="destroyName" placeholder="Entrez un nom">
-        <br><br>
-        <input type="number" id="destroyTicketNumber" placeholder="Numéro du ticket">
-        <br><br>
-        <button onclick="destroyTicket()">Détruire Ticket</button>
-        <br>
-        <button onclick="openListPage('destroyed')">Tickets Détruits</button>
-        <button onclick="resetDestroyedTickets()">Réinitialiser Tickets Détruits</button>
-    </div>
+    <!-- Page principale -->
+    <div id="mainContent" class="hidden">
+        <h1>Vyniamar Brunch - 1ère édition</h1>
+        <img src="VB1.png" alt="Logo" id="logo">
+        <div class="container">
+            <h2>Génération de QR Code</h2>
+            <input type="text" id="name" placeholder="Entrez un nom">
+            <br><br>
+            <input type="number" id="ticketNumber" placeholder="Entrez un numéro (001-600)">
+            <br><br>
+            <button onclick="generateQRCode()">Générer QR Code</button>
+            <canvas id="qrCanvas"></canvas>
+            <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
+            <br>
+            <button onclick="openListPage('generated')">Tickets Générés</button>
+            <button onclick="resetGeneratedTickets()">Réinitialiser Tickets Générés</button>
+        </div>
 
-    <footer>
-        <button onclick="logout()" style="margin-top: 20px;">Se déconnecter</button>
-        <p>Vyniamar Brunch - 1ère édition 2025</p>
-    </footer>
+        <div class="container">
+            <h2>Destruction de QR Code</h2>
+            <input type="text" id="destroyName" placeholder="Entrez un nom">
+            <br><br>
+            <input type="number" id="destroyTicketNumber" placeholder="Numéro du ticket">
+            <br><br>
+            <button onclick="destroyTicket()">Détruire Ticket</button>
+            <br>
+            <button onclick="openListPage('destroyed')">Tickets Détruits</button>
+            <button onclick="resetDestroyedTickets()">Réinitialiser Tickets Détruits</button>
+        </div>
+
+        <footer>
+            <button onclick="logout()" style="margin-top: 20px;">Se déconnecter</button>
+            <p>Vyniamar Brunch - 1ère édition 2025</p>
+        </footer>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
-        // Redirection si non connecté
-        if (!sessionStorage.getItem('isLoggedIn')) {
-            window.location.href = "connexion.html";
+        // Stockage des données
+        let generatedTickets = JSON.parse(localStorage.getItem('generatedTickets')) || [];
+        let destroyedTickets = JSON.parse(localStorage.getItem('destroyedTickets')) || [];
+
+        // Connexion
+        function login() {
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+
+            if (login === "VB9876543" && password === "9876543VB") {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+            } else {
+                alert("Identifiants incorrects");
+            }
         }
 
         // Déconnexion
         function logout() {
-            sessionStorage.removeItem('isLoggedIn');
-            window.location.href = "connexion.html";
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
         }
-
-        // Stockage des données
-        let generatedTickets = JSON.parse(localStorage.getItem('generatedTickets')) || [];
-        let destroyedTickets = JSON.parse(localStorage.getItem('destroyedTickets')) || [];
 
         // Génération de QR Code
         async function generateQRCode() {
@@ -189,21 +146,48 @@
             const canvas = document.getElementById('qrCanvas');
             await QRCode.toCanvas(canvas, qrData, { width: 200 });
 
-            generatedTickets.push({ name, number: ticketNumber, date });
-            localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
 
-            const downloadLink = document.getElementById('downloadLink');
-            downloadLink.href = canvas.toDataURL();
-            downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
-            downloadLink.style.display = 'inline';
-            downloadLink.textContent = 'Télécharger QR Code';
+            // Redimensionnement du canvas
+            finalCanvas.width = canvas.width;
+            finalCanvas.height = canvas.height + 100;
+
+            ctx.fillStyle = "#fff"; // Fond blanc
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
+
+            // Ajout des informations en dessous
+            ctx.font = "14px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText(`Nom: ${name}`, 10, canvas.height + 20);
+            ctx.fillText(`Ticket #${ticketNumber}`, 10, canvas.height + 35);
+            ctx.fillText(`${type}`, 10, canvas.height + 50);
+
+            const img = new Image();
+            img.src = "VB1.png";
+            img.onload = () => {
+                ctx.drawImage(img, (finalCanvas.width - img.width) / 2, canvas.height + 60, 50, 50);
+
+                generatedTickets.push({ name, number: ticketNumber, date });
+                localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
+
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = finalCanvas.toDataURL();
+                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+                downloadLink.style.display = 'inline';
+                downloadLink.textContent = 'Télécharger QR Code';
+            };
         }
 
-        // Destruction de QR Code
-        function destroyTicket() { ... }
-        function openListPage(type) { ... }
-        function resetGeneratedTickets() { ... }
-        function resetDestroyedTickets() { ... }
+        // Gestion des tickets détruits
+        function destroyTicket() { ... } // Identique à l'implémentation précédente
+
+        function openListPage(type) { ... } // Identique
+
+        function resetGeneratedTickets() { ... } // Identique
+
+        function resetDestroyedTickets() { ... } // Identique
     </script>
 </body>
 </html>
