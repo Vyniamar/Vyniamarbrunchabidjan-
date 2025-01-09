@@ -48,6 +48,20 @@
             font-size: 14px;
             color: #000;
         }
+        .hidden {
+            display: none;
+        }
+        .listPage {
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 20px;
+            margin: auto;
+            max-width: 600px;
+            text-align: left;
+        }
+        .listPage h2 {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -99,13 +113,18 @@
         </footer>
     </div>
 
+    <!-- Page des listes -->
+    <div id="listPage" class="hidden listPage">
+        <h2 id="listTitle"></h2>
+        <div id="listContent"></div>
+        <button onclick="closeListPage()">Retour</button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
-        // Stockage des données
         let generatedTickets = JSON.parse(localStorage.getItem('generatedTickets')) || [];
         let destroyedTickets = JSON.parse(localStorage.getItem('destroyedTickets')) || [];
 
-        // Connexion
         function login() {
             const login = document.getElementById('login').value;
             const password = document.getElementById('password').value;
@@ -118,13 +137,11 @@
             }
         }
 
-        // Déconnexion
         function logout() {
             document.getElementById('mainContent').classList.add('hidden');
             document.getElementById('loginPage').classList.remove('hidden');
         }
 
-        // Génération de QR Code
         async function generateQRCode() {
             const name = document.getElementById('name').value.trim();
             const ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
@@ -146,48 +163,66 @@
             const canvas = document.getElementById('qrCanvas');
             await QRCode.toCanvas(canvas, qrData, { width: 200 });
 
-            const finalCanvas = document.createElement('canvas');
-            const ctx = finalCanvas.getContext('2d');
-
-            // Redimensionnement du canvas
-            finalCanvas.width = canvas.width;
-            finalCanvas.height = canvas.height + 100;
-
-            ctx.fillStyle = "#fff"; // Fond blanc
-            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            ctx.drawImage(canvas, 0, 0);
-
-            // Ajout des informations en dessous
-            ctx.font = "14px Arial";
-            ctx.fillStyle = "#000";
-            ctx.fillText(`Nom: ${name}`, 10, canvas.height + 20);
-            ctx.fillText(`Ticket #${ticketNumber}`, 10, canvas.height + 35);
-            ctx.fillText(`${type}`, 10, canvas.height + 50);
-
-            const img = new Image();
-            img.src = "VB1.png";
-            img.onload = () => {
-                ctx.drawImage(img, (finalCanvas.width - img.width) / 2, canvas.height + 60, 50, 50);
-
-                generatedTickets.push({ name, number: ticketNumber, date });
-                localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
-
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = finalCanvas.toDataURL();
-                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
-                downloadLink.style.display = 'inline';
-                downloadLink.textContent = 'Télécharger QR Code';
-            };
+            generatedTickets.push({ name, number: ticketNumber, date });
+            localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
         }
 
-        // Gestion des tickets détruits
-        function destroyTicket() { ... } // Identique à l'implémentation précédente
+        function destroyTicket() {
+            const name = document.getElementById('destroyName').value.trim();
+            const ticketNumber = document.getElementById('destroyTicketNumber').value.padStart(3, '0');
 
-        function openListPage(type) { ... } // Identique
+            if (!name || !ticketNumber) {
+                alert('Veuillez remplir les champs.');
+                return;
+            }
 
-        function resetGeneratedTickets() { ... } // Identique
+            destroyedTickets.push({ name, number: ticketNumber });
+            localStorage.setItem('destroyedTickets', JSON.stringify(destroyedTickets));
+            alert(`Le ticket #${ticketNumber} a été détruit.`);
+        }
 
-        function resetDestroyedTickets() { ... } // Identique
+        function openListPage(type) {
+            const listPage = document.getElementById('listPage');
+            const listContent = document.getElementById('listContent');
+            const listTitle = document.getElementById('listTitle');
+
+            listContent.innerHTML = '';
+            listTitle.textContent = type === 'generated' ? 'Liste des Tickets Générés' : 'Liste des Tickets Détruits';
+
+            const list = type === 'generated' ? generatedTickets : destroyedTickets;
+
+            if (list.length === 0) {
+                listContent.innerHTML = '<p>Aucun ticket disponible.</p>';
+            } else {
+                list.forEach(ticket => {
+                    listContent.innerHTML += `<p>Nom: ${ticket.name} | Ticket #${ticket.number} | Date: ${ticket.date}</p>`;
+                });
+            }
+
+            document.getElementById('mainContent').classList.add('hidden');
+            listPage.classList.remove('hidden');
+        }
+
+        function closeListPage() {
+            document.getElementById('listPage').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+        }
+
+        function resetGeneratedTickets() {
+            if (confirm('Voulez-vous vraiment réinitialiser les tickets générés ?')) {
+                generatedTickets = [];
+                localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
+                alert('Liste des tickets générés réinitialisée.');
+            }
+        }
+
+        function resetDestroyedTickets() {
+            if (confirm('Voulez-vous vraiment réinitialiser les tickets détruits ?')) {
+                destroyedTickets = [];
+                localStorage.setItem('destroyedTickets', JSON.stringify(destroyedTickets));
+                alert('Liste des tickets détruits réinitialisée.');
+            }
+        }
     </script>
 </body>
 </html>
