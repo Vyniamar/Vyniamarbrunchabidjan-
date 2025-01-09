@@ -6,7 +6,7 @@
     <title>VYNIAMAR BRUNCH</title>
     <style>
         body {
-            background-color: #fff700; /* Jaune */
+            background-color: #fff700;
             font-family: Arial, sans-serif;
             color: #000;
             text-align: center;
@@ -54,6 +54,7 @@
     </style>
 </head>
 <body>
+    <!-- Page de connexion -->
     <div id="loginPage" class="container">
         <img src="VB1.png" alt="Logo" id="logo">
         <h1>VYNIAMAR BRUNCH</h1>
@@ -65,6 +66,7 @@
         <button onclick="login()">Se connecter</button>
     </div>
 
+    <!-- Page principale -->
     <div id="mainContent" class="hidden">
         <h1>Vyniamar Brunch - 1ère édition</h1>
         <img src="VB1.png" alt="Logo" id="logo">
@@ -77,7 +79,8 @@
             <button onclick="generateQRCode()">Générer QR Code</button>
             <canvas id="qrCanvas"></canvas>
             <a id="downloadLink" style="display: none;">Télécharger QR Code</a>
-            <button onclick="viewGeneratedTickets()">Tickets Générés</button>
+            <br>
+            <button onclick="openListPage('generated')">Tickets Générés</button>
             <button onclick="resetGeneratedTickets()">Réinitialiser Tickets Générés</button>
         </div>
 
@@ -88,7 +91,8 @@
             <input type="number" id="destroyTicketNumber" placeholder="Numéro du ticket">
             <br><br>
             <button onclick="destroyTicket()">Détruire Ticket</button>
-            <button onclick="viewDestroyedTickets()">Tickets Détruits</button>
+            <br>
+            <button onclick="openListPage('destroyed')">Tickets Détruits</button>
             <button onclick="resetDestroyedTickets()">Réinitialiser Tickets Détruits</button>
         </div>
 
@@ -99,10 +103,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
+        // Stockage des données
         let generatedTickets = JSON.parse(localStorage.getItem('generatedTickets')) || [];
         let destroyedTickets = JSON.parse(localStorage.getItem('destroyedTickets')) || [];
 
-        // Connexion au site
+        // Connexion
         function login() {
             const login = document.getElementById('login').value;
             const password = document.getElementById('password').value;
@@ -121,10 +126,10 @@
             document.getElementById('loginPage').classList.remove('hidden');
         }
 
-        // Génération d'un QR Code
+        // Génération de QR Code
         async function generateQRCode() {
             const name = document.getElementById('name').value.trim();
-            let ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
+            const ticketNumber = document.getElementById('ticketNumber').value.padStart(3, '0');
 
             if (!name || !ticketNumber || ticketNumber < 1 || ticketNumber > 600) {
                 alert('Veuillez entrer un nom et un numéro valide entre 001 et 600.');
@@ -143,63 +148,51 @@
             const canvas = document.getElementById('qrCanvas');
             await QRCode.toCanvas(canvas, qrData, { width: 200 });
 
-            const logo = new Image();
-            logo.src = "VB1.png";
-            logo.onload = () => {
-                const ctx = canvas.getContext('2d');
-                const height = canvas.height;
-                const width = canvas.width;
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = canvas.width;
+            finalCanvas.height = canvas.height + 50;
+            const ctx = finalCanvas.getContext('2d');
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
 
-                // Augmenter la taille pour ajouter le logo et les informations
-                const finalCanvas = document.createElement('canvas');
-                finalCanvas.width = width;
-                finalCanvas.height = height + 100;
+            ctx.font = "14px Arial";
+            ctx.fillStyle = "#000";
+            ctx.fillText(`Nom: ${name}`, 10, canvas.height + 20);
+            ctx.fillText(`Ticket #${ticketNumber}`, 10, canvas.height + 35);
 
-                const finalCtx = finalCanvas.getContext('2d');
-                finalCtx.fillStyle = "#fff";
-                finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-                // Copier le QR Code sur le canvas final
-                finalCtx.drawImage(canvas, 0, 0);
-
-                // Ajouter le logo
-                finalCtx.drawImage(logo, (width - 50) / 2, height + 10, 50, 50);
-
-                // Ajouter les informations
-                finalCtx.fillStyle = "#000";
-                finalCtx.font = "12px Arial";
-                finalCtx.textAlign = "center";
-                finalCtx.fillText(`Nom: ${name}`, width / 2, height + 70);
-                finalCtx.fillText(`Ticket #${ticketNumber}`, width / 2, height + 85);
-
-                // Enregistrer dans la liste des tickets générés
-                generatedTickets.push({ name, number: ticketNumber, date });
-                localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
-
-                // Activer le lien de téléchargement
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = finalCanvas.toDataURL();
-                downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
-                downloadLink.style.display = 'inline';
-                downloadLink.textContent = 'Télécharger QR Code';
-            };
-        }
-
-        // Voir les tickets générés
-        function viewGeneratedTickets() {
-            const list = generatedTickets.map(ticket => 
-                `Date: ${ticket.date}\nNom: ${ticket.name}\nNuméro: #${ticket.number}`).join("\n\n");
-            alert("Tickets générés :\n" + (list || "Aucun ticket généré."));
-        }
-
-        // Réinitialiser les tickets générés
-        function resetGeneratedTickets() {
-            generatedTickets = [];
+            generatedTickets.push({ name, number: ticketNumber, date });
             localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
-            alert("La liste des tickets générés a été réinitialisée.");
+
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = finalCanvas.toDataURL();
+            downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+            downloadLink.style.display = 'inline';
+            downloadLink.textContent = 'Télécharger QR Code';
         }
 
-        // Destruction d'un ticket
+        function openListPage(type) {
+            let tickets = type === "generated" ? generatedTickets : destroyedTickets;
+            const listPage = window.open("", "_blank");
+            listPage.document.write(`
+                <html>
+                <head>
+                    <title>Liste des Tickets</title>
+                    <style>body { font-family: Arial; margin: 20px; }</style>
+                </head>
+                <body>
+                    <h1>${type === "generated" ? "Tickets Générés" : "Tickets Détruits"}</h1>
+                    <ul>
+                        ${tickets.map(ticket => `
+                            <li>Nom: ${ticket.name}, Numéro: #${ticket.number}, Date: ${ticket.date}</li>
+                        `).join("")}
+                    </ul>
+                </body>
+                </html>
+            `);
+        }
+
+        // Destruction de tickets
         function destroyTicket() {
             const name = document.getElementById('destroyName').value.trim();
             const ticketNumber = document.getElementById('destroyTicketNumber').value.padStart(3, '0');
@@ -217,18 +210,17 @@
             alert(`Le ticket #${ticketNumber} - ${name} a été détruit.`);
         }
 
-        // Voir les tickets détruits
-        function viewDestroyedTickets() {
-            const list = destroyedTickets.map(ticket => 
-                `Date: ${ticket.date}\nNom: ${ticket.name}\nNuméro: #${ticket.number}`).join("\n\n");
-            alert("Tickets détruits :\n" + (list || "Aucun ticket détruit."));
+        // Réinitialisation
+        function resetGeneratedTickets() {
+            generatedTickets = [];
+            localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
+            alert("Tickets générés réinitialisés.");
         }
 
-        // Réinitialiser les tickets détruits
         function resetDestroyedTickets() {
             destroyedTickets = [];
             localStorage.setItem('destroyedTickets', JSON.stringify(destroyedTickets));
-            alert("La liste des tickets détruits a été réinitialisée.");
+            alert("Tickets détruits réinitialisés.");
         }
     </script>
 </body>
