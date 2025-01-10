@@ -160,8 +160,36 @@
             const date = new Date().toLocaleString();
             const qrData = `Vyniamar Brunch - 1ère édition\nNom: ${name}\nTicket #${ticketNumber}\n${type}\nDate: ${date}`;
 
-            const canvas = document.getElementById('qrCanvas');
+            const canvas = document.createElement('canvas');
             await QRCode.toCanvas(canvas, qrData, { width: 200 });
+
+            const finalCanvas = document.createElement('canvas');
+            const ctx = finalCanvas.getContext('2d');
+
+            finalCanvas.width = canvas.width;
+            finalCanvas.height = canvas.height + 60;
+
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
+
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#000";
+            ctx.textAlign = "center";
+            ctx.fillText(`Nom: ${name}`, finalCanvas.width / 2, canvas.height + 20);
+            ctx.fillText(`Ticket #: ${ticketNumber}`, finalCanvas.width / 2, canvas.height + 40);
+
+            const displayCanvas = document.getElementById('qrCanvas');
+            const displayCtx = displayCanvas.getContext('2d');
+            displayCanvas.width = finalCanvas.width;
+            displayCanvas.height = finalCanvas.height;
+            displayCtx.drawImage(finalCanvas, 0, 0);
+
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = finalCanvas.toDataURL("image/png");
+            downloadLink.download = `ticket_${ticketNumber}_${name}.png`;
+            downloadLink.style.display = 'inline';
+            downloadLink.textContent = 'Télécharger QR Code';
 
             generatedTickets.push({ name, number: ticketNumber, date });
             localStorage.setItem('generatedTickets', JSON.stringify(generatedTickets));
